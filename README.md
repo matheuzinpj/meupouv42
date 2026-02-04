@@ -3,94 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pou: Edição Higiene</title>
+    <title>Meu Pou: Level Up</title>
     <style>
         :root {
             --sala: #ff85a2; --cozinha: #ff9185; --quarto: #ffff66;
             --banheiro: #00ffff; --garden: #00ccff;
         }
-
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; background: #222; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; overflow: hidden; }
-
-        #game-container {
-            width: 360px; height: 640px; background-color: var(--sala);
-            position: relative; overflow: hidden; border: 8px solid #000; border-radius: 30px;
-            display: flex; flex-direction: column; transition: background 0.4s;
-        }
-
-        /* --- BARRAS DE STATUS --- */
-        .status-container {
-            height: 80px; background: rgba(255,255,255,0.4); border-bottom: 2px solid #000;
-            display: grid; grid-template-columns: repeat(4, 1fr) 80px; padding: 10px; gap: 5px; align-items: center; z-index: 20;
-        }
-        .stat-box { display: flex; flex-direction: column; align-items: center; }
-        .bar-bg { width: 100%; height: 12px; background: #fff; border: 1.5px solid #000; border-radius: 5px; overflow: hidden; margin-top: 4px; }
+        body { margin: 0; background: #222; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Arial', sans-serif; overflow: hidden; }
+        
+        #game-container { width: 360px; height: 640px; background-color: var(--sala); position: relative; overflow: hidden; border: 8px solid #000; border-radius: 30px; display: flex; flex-direction: column; transition: background 0.4s; }
+        
+        /* STATUS E NÍVEL */
+        .status-container { height: 80px; background: rgba(255,255,255,0.4); border-bottom: 2px solid #000; display: grid; grid-template-columns: repeat(4, 1fr) 80px; padding: 10px; gap: 5px; align-items: center; z-index: 20; }
+        .bar-bg { width: 100%; height: 12px; background: #fff; border: 1.5px solid #000; border-radius: 5px; overflow: hidden; }
         .bar-fill { height: 100%; width: 100%; transition: width 0.3s; }
         #fome-bar { background: #ff4757; } #saude-bar { background: #2ed573; } #fun-bar { background: #1e90ff; } #energy-bar { background: #ffa500; }
-        .coins { background: #fff; border: 2px solid #000; border-radius: 15px; font-weight: bold; text-align: center; padding: 5px 0; }
-
-        /* --- NAVEGAÇÃO --- */
-        .nav { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; font-weight: bold; font-size: 20px; z-index: 20; }
-        .arrow { cursor: pointer; font-size: 35px; user-select: none; }
-
-        /* --- POO E EXPRESSÕES --- */
-        .stage { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; }
-        #pou {
-            width: 160px; height: 140px; background: #b8860b; border: 4px solid #000;
-            border-radius: 50% 50% 45% 45% / 60% 60% 40% 40%; position: relative; transition: 0.3s; z-index: 10;
+        
+        .level-circle { 
+            width: 45px; height: 45px; background: #fff; border: 3px solid #000; border-radius: 50%; 
+            display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px;
+            position: relative; box-shadow: inset 0 -3px 0 #ddd;
         }
-        .eye { width: 35px; height: 35px; background: #fff; border: 3px solid #000; border-radius: 50%; position: absolute; top: 35px; transition: 0.3s; overflow: hidden;}
+        /* Barra de XP em volta do círculo */
+        .xp-ring {
+            position: absolute; width: 52px; height: 52px; border: 4px solid #00ff00;
+            border-radius: 50%; clip-path: inset(0 0 50% 0); /* Simulação de progresso */
+            display: none; 
+        }
+
+        .coins-display { position: absolute; top: 90px; right: 20px; background: #fff; border: 2px solid #000; border-radius: 15px; padding: 2px 10px; font-weight: bold; z-index: 20; }
+
+        /* NAVEGAÇÃO */
+        .nav { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; font-weight: bold; font-size: 20px; z-index: 20; }
+        .arrow { cursor: pointer; font-size: 35px; }
+
+        /* POU */
+        .stage { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; }
+        #pou { width: 160px; height: 140px; background: #b8860b; border: 4px solid #000; border-radius: 50% 50% 45% 45% / 60% 60% 40% 40%; position: relative; transition: 0.3s; z-index: 10; }
+        .eye { width: 35px; height: 35px; background: #fff; border: 3px solid #000; border-radius: 50%; position: absolute; top: 35px; overflow: hidden; }
         .eye.l { left: 30px; } .eye.r { right: 35px; }
-        .pupil { width: 14px; height: 14px; background: #000; border-radius: 50%; margin: 10px; transition: 0.3s; }
+        .pupil { width: 14px; height: 14px; background: #000; border-radius: 50%; margin: 10px; }
         .mouth { width: 40px; height: 4px; background: #000; position: absolute; bottom: 35px; left: 55px; border-radius: 10px; transition: 0.3s; }
         
-        /* ESTADOS */
-        #pou.tired .eye { height: 15px; margin-top: 10px; }
-        #pou.sad .mouth { height: 10px; border-radius: 50% 50% 0 0; background: transparent; border: 3px solid #000; border-bottom: none; }
+        /* EXPRESSÕES */
+        #pou.tired .eye { height: 12px; margin-top: 12px; }
         #pou.hungry .mouth { width: 20px; height: 20px; border-radius: 50%; left: 65px; bottom: 25px; }
+        #pou.sad .mouth { height: 10px; border-radius: 50% 50% 0 0; background: transparent; border: 3px solid #000; border-bottom: none; }
         #pou.happy .mouth { height: 15px; border-radius: 0 0 20px 20px; }
-        #pou.sick .mouth { width: 30px; height: 10px; border-radius: 5px; transform: rotate(-5deg); } /* Cara de doente/sujo */
 
-        /* --- SISTEMA DE COCÔ --- */
-        .poop {
-            position: absolute; font-size: 35px; z-index: 5;
-            filter: drop-shadow(2px 2px 0px rgba(0,0,0,0.2));
-            user-select: none;
-        }
+        .poop { position: absolute; font-size: 35px; z-index: 5; }
+        #night { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,50,0.7); display: none; z-index: 50; pointer-events: none; }
 
-        #pillow { width: 250px; height: 80px; background: #fff; border: 3px solid #000; border-radius: 50%; position: absolute; bottom: 80px; display: none; }
-
-        /* --- LOJA --- */
-        #shop-modal {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 280px; background: white; border: 4px solid #000; border-radius: 20px;
-            padding: 20px; z-index: 100; display: none;
-        }
-        .shop-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 10px; background: #eee; border-radius: 10px; }
-        .buy-btn { background: #2ed573; border: 2px solid #000; border-radius: 5px; cursor: pointer; font-weight: bold; padding: 5px; }
-
-        /* --- RODAPÉ --- */
-        .footer { height: 110px; background: rgba(0,0,0,0.1); display: flex; justify-content: space-around; align-items: center; z-index: 20; }
-        .btn-action { display: flex; flex-direction: column; align-items: center; cursor: pointer; width: 80px; }
+        /* FOOTER */
+        .footer { height: 110px; background: rgba(0,0,0,0.1); display: flex; justify-content: space-around; align-items: center; }
+        .btn-action { display: flex; flex-direction: column; align-items: center; cursor: pointer; }
         .icon-circle { width: 55px; height: 55px; background: #fff; border: 3px solid #000; border-radius: 15px; display: flex; justify-content: center; align-items: center; font-size: 28px; margin-bottom: 5px; box-shadow: 0 4px 0 #000; }
         .btn-action span { font-size: 11px; font-weight: bold; }
-
-        #night { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,50,0.7); display: none; pointer-events: none; z-index: 50; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
     <div id="night"></div>
-
     <div class="status-container">
         <div class="stat-box">🍗<div class="bar-bg"><div id="fome-bar" class="bar-fill"></div></div></div>
         <div class="stat-box">✚<div class="bar-bg"><div id="saude-bar" class="bar-fill"></div></div></div>
         <div class="stat-box">🕹️<div class="bar-bg"><div id="fun-bar" class="bar-fill"></div></div></div>
         <div class="stat-box">⚡<div class="bar-bg"><div id="energy-bar" class="bar-fill"></div></div></div>
-        <div class="coins">💰 <span id="coin-val">50</span></div>
+        <div class="level-circle" id="level-val">1</div>
     </div>
+
+    <div class="coins-display">💰 <span id="coin-val">50</span></div>
 
     <div class="nav">
         <div class="arrow" onclick="moveRoom(-1)">❮</div>
@@ -99,187 +83,112 @@
     </div>
 
     <div id="main-stage" class="stage">
-        <div id="pillow"></div>
         <div id="pou">
             <div class="eye l"><div class="pupil"></div></div>
             <div class="eye r"><div class="pupil"></div></div>
             <div class="mouth"></div>
         </div>
-        </div>
-
-    <div id="shop-modal">
-        <h3 style="margin-top:0">Loja</h3>
-        <div class="shop-item"><span>🍎 Maçã (+20)</span><button class="buy-btn" onclick="buyItem(15, 20)">$15</button></div>
-        <div class="shop-item"><span>🍕 Pizza (+50)</span><button class="buy-btn" onclick="buyItem(30, 50)">$30</button></div>
-        <button onclick="toggleShop(false)" style="width:100%; padding: 10px; border: 2px solid #000; border-radius: 10px; cursor:pointer">Fechar</button>
     </div>
 
     <div id="footer" class="footer"></div>
 </div>
 
 <script>
-    let stats = { hunger: 70, health: 100, fun: 70, energy: 70, coins: 50 };
-    let poops = []; // Array para guardar as posições dos cocôs
+    let stats = { hunger: 60, health: 100, fun: 60, energy: 60, coins: 50, level: 1, xp: 0 };
     let rooms = ["COZINHA", "BANHEIRO", "QUARTO", "SALA", "GARDEN"];
     let currentRoom = 3; 
     let sleeping = false;
+    let poops = [];
 
     function moveRoom(dir) {
         currentRoom = (currentRoom + dir + rooms.length) % rooms.length;
         render();
     }
 
+    function addXP(amount) {
+        stats.xp += amount;
+        if (stats.xp >= 100) {
+            stats.level++;
+            stats.xp = 0;
+            stats.coins += 50;
+            alert("LEVEL UP! Você agora é nível " + stats.level + " e ganhou 50 moedas!");
+            document.getElementById('level-val').innerText = stats.level;
+        }
+    }
+
     function updateStats() {
         if(!sleeping) {
             stats.hunger = Math.max(0, stats.hunger - 0.4);
-            stats.fun = Math.max(0, stats.fun - 0.3);
-            stats.energy = Math.max(0, stats.energy - 0.2);
+            stats.fun = Math.max(0, stats.fun - 0.2);
+            stats.energy = Math.max(0, stats.energy - 0.1);
         } else {
-            stats.energy = Math.min(100, stats.energy + 2);
-            if(stats.energy >= 100) toggleSleep(false);
+            stats.energy = Math.min(100, stats.energy + 3);
+            if(stats.energy >= 100) addXP(0.5);
         }
+        if(poops.length > 0) stats.health = Math.max(0, stats.health - 0.3);
 
-        // Se tiver cocô, a saúde cai!
-        if(poops.length > 0) {
-            stats.health = Math.max(0, stats.health - (0.5 * poops.length));
-        }
-        
         document.getElementById('fome-bar').style.width = stats.hunger + "%";
         document.getElementById('saude-bar').style.width = stats.health + "%";
         document.getElementById('fun-bar').style.width = stats.fun + "%";
         document.getElementById('energy-bar').style.width = stats.energy + "%";
         document.getElementById('coin-val').innerText = Math.floor(stats.coins);
-
-        updateExpression();
-    }
-
-    function updateExpression() {
-        const p = document.getElementById('pou');
-        p.className = ""; 
-
-        if (sleeping) { p.classList.add('tired'); return; }
-
-        if (stats.health < 40 || poops.length > 2) {
-            p.classList.add('sick');
-        } else if (stats.energy < 30) {
-            p.classList.add('tired');
-        } else if (stats.hunger < 30) {
-            p.classList.add('hungry');
-        } else if (stats.fun < 30) {
-            p.classList.add('sad');
-        } else if (stats.hunger > 80 && stats.fun > 80) {
-            p.classList.add('happy');
-        }
-    }
-
-    // Criar Cocô
-    function spawnPoop() {
-        const x = Math.random() * 250 + 20;
-        const y = Math.random() * 200 + 50;
-        poops.push({x, y});
-        renderPoops();
-    }
-
-    function renderPoops() {
-        // Remove cocôs antigos da visão
-        document.querySelectorAll('.poop').forEach(p => p.remove());
         
-        // Desenha os cocôs do array
-        const stage = document.getElementById('main-stage');
-        poops.forEach(pPos => {
-            const pDiv = document.createElement('div');
-            pDiv.className = 'poop';
-            pDiv.innerHTML = '💩';
-            pDiv.style.left = pPos.x + 'px';
-            pDiv.style.top = pPos.y + 'px';
-            stage.appendChild(pDiv);
-        });
+        const p = document.getElementById('pou');
+        p.className = "";
+        if(sleeping) p.classList.add('tired');
+        else if(stats.hunger < 30) p.classList.add('hungry');
+        else if(stats.fun < 30) p.classList.add('sad');
+        else if(stats.hunger > 80) p.classList.add('happy');
     }
 
     function render() {
         const name = rooms[currentRoom];
-        const container = document.getElementById('game-container');
-        const foot = document.getElementById('footer');
-        
+        document.getElementById('game-container').style.backgroundColor = `var(--${name.toLowerCase()})`;
         document.getElementById('room-name').innerText = name;
-        container.style.backgroundColor = `var(--${name.toLowerCase()})`;
-        document.getElementById('pillow').style.display = (name === "QUARTO") ? "block" : "none";
-
-        renderPoops(); // Mantém os cocôs visíveis ao trocar de sala
-
-        let buttons = "";
-        if(name === "COZINHA") {
-            buttons = `<div class="btn-action" onclick="eat()"> <div class="icon-circle">🍕</div><span>Comer</span></div>
-                       <div class="btn-action" onclick="toggleShop(true)"> <div class="icon-circle">🛒</div><span>Loja</span></div>`;
-        } else if(name === "BANHEIRO") {
-            buttons = `<div class="btn-action" onclick="clean()"> <div class="icon-circle">🧼</div><span>Limpar</span></div>
-                       <div class="btn-action" onclick="toggleShop(true)"> <div class="icon-circle">🛒</div><span>Loja</span></div>`;
-        } else if(name === "QUARTO") {
-            buttons = `<div class="btn-action" onclick="toggleSleep()"> <div class="icon-circle">💡</div><span>Abajur</span></div>
-                       <div class="btn-action" onclick="toggleShop(true)"> <div class="icon-circle">🛒</div><span>Loja</span></div>`;
-        } else if(name === "SALA") {
-            buttons = `<div class="btn-action" onclick="play()"> <div class="icon-circle">🎮</div><span>Jogos</span></div>
-                       <div class="btn-action" onclick="toggleShop(true)"> <div class="icon-circle">🛒</div><span>Loja</span></div>`;
-        } else {
-            buttons = `<div class="btn-action" onclick="spawnPoop()"> <div class="icon-circle">☁️</div><span>Nuvem</span></div>
-                       <div class="btn-action" onclick="toggleShop(true)"> <div class="icon-circle">🛒</div><span>Loja</span></div>`;
-        }
-        foot.innerHTML = buttons;
+        
+        let btnHTML = "";
+        if(name === "COZINHA") btnHTML = `<div class="btn-action" onclick="eat()"> <div class="icon-circle">🍕</div><span>Comer</span></div>`;
+        else if(name === "BANHEIRO") btnHTML = `<div class="btn-action" onclick="clean()"> <div class="icon-circle">🧼</div><span>Limpar</span></div>`;
+        else if(name === "QUARTO") btnHTML = `<div class="btn-action" onclick="toggleSleep()"> <div class="icon-circle">💡</div><span>Abajur</span></div>`;
+        else if(name === "SALA") btnHTML = `<div class="btn-action" onclick="play()"> <div class="icon-circle">🎮</div><span>Jogar</span></div>`;
+        else btnHTML = `<div class="btn-action" onclick="alert('Garden!')"> <div class="icon-circle">☁️</div><span>Nuvem</span></div>`;
+        
+        document.getElementById('footer').innerHTML = btnHTML;
     }
 
-    function eat() {
+    function eat() { 
         if(stats.hunger < 100) {
-            stats.hunger = Math.min(100, stats.hunger + 15);
-            animatePou();
-            // 30% de chance de fazer cocô ao comer
-            if(Math.random() < 0.3) spawnPoop();
-        } else { alert("Tô cheio!"); }
-    }
-
-    function clean() {
-        if(poops.length > 0) {
-            poops = [];
-            stats.health = Math.min(100, stats.health + 40);
-            renderPoops();
-            alert("Tudo limpo!");
-        } else {
-            stats.health = Math.min(100, stats.health + 5);
-            alert("Já estou limpo!");
+            stats.hunger = Math.min(100, stats.hunger + 15); 
+            addXP(10);
+            if(Math.random() > 0.7) spawnPoop();
         }
-        document.getElementById('pou').style.boxShadow = "0 0 40px #fff";
-        setTimeout(() => document.getElementById('pou').style.boxShadow = "none", 800);
     }
-
-    function play() {
-        stats.fun = Math.min(100, stats.fun + 20);
-        stats.coins += 10;
-        const p = document.getElementById('pou');
-        p.style.transform = "translateY(-40px)";
-        setTimeout(() => p.style.transform = "translateY(0)", 200);
+    function play() { 
+        stats.fun = Math.min(100, stats.fun + 20); 
+        stats.coins += 10; 
+        addXP(15);
     }
-
-    function toggleSleep(val) {
-        sleeping = (val !== undefined) ? val : !sleeping;
-        document.getElementById('night').style.display = sleeping ? "block" : "none";
-        updateExpression();
+    function clean() { 
+        if(poops.length > 0) {
+            poops = []; 
+            stats.health = 100; 
+            document.querySelectorAll('.poop').forEach(p => p.remove()); 
+            addXP(20);
+        }
     }
-
-    function toggleShop(open) { document.getElementById('shop-modal').style.display = open ? "block" : "none"; }
-
-    function buyItem(cost, gain) {
-        if(stats.coins >= cost) {
-            stats.coins -= cost;
-            stats.hunger = Math.min(100, stats.hunger + gain);
-            if(Math.random() < 0.5) spawnPoop(); // Comida da loja dá mais vontade de ir ao banheiro!
-            animatePou();
-            toggleShop(false);
-        } else { alert("Moedas insuficientes!"); }
+    function toggleSleep() { 
+        sleeping = !sleeping; 
+        document.getElementById('night').style.display = sleeping ? "block" : "none"; 
+        if(sleeping) addXP(5);
     }
-
-    function animatePou() {
-        const p = document.getElementById('pou');
-        p.style.transform = "scale(1.15)";
-        setTimeout(() => p.style.transform = "scale(1)", 200);
+    
+    function spawnPoop() {
+        const p = document.createElement('div');
+        p.className = 'poop'; p.innerHTML = '💩';
+        p.style.left = Math.random() * 200 + 50 + "px";
+        p.style.top = Math.random() * 200 + 100 + "px";
+        document.getElementById('main-stage').appendChild(p);
+        poops.push(1);
     }
 
     setInterval(updateStats, 1000);
